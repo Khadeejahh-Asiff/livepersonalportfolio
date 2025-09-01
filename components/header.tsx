@@ -40,13 +40,13 @@ export default function Header() {
           isScrolled
             ? "bg-white/80 dark:bg-[#18181B]/80 shadow-lg backdrop-blur-md border-b border-gray-200 dark:border-gray-800"
             : "bg-transparent"
-        } transition-all duration-300 flex flex-col md:flex-row items-center justify-between px-2 sm:px-4 md:px-12 md:py-4 lg:px-24 xl:px-32 py-2`}
+        } transition-all duration-300 flex flex-row items-center justify-between px-2 sm:px-4 md:px-12 md:py-4 lg:px-24 xl:px-32 py-2`}
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 120, damping: 18 }}
       >
-        {/* Logo and navigation for desktop */}
-        <div className="flex items-center gap-2 sm:gap-4 mb-2 md:mb-0">
+        {/* Logo and navigation for desktop - perfectly aligned */}
+        <div className="flex items-center gap-8">
           <Link
             href="/"
             className="flex items-center gap-2 font-bold text-base sm:text-lg md:text-xl lg:text-2xl"
@@ -54,24 +54,23 @@ export default function Header() {
             <FaCode className="text-blue-500" />
             <span className="hidden sm:inline">Khadeeja</span>
           </Link>
+          {/* Desktop navigation */}
+          <nav className="hidden md:flex gap-4 sm:gap-6 lg:gap-10 xl:gap-12">
+            <ul className="flex items-center space-x-4">
+              {links.map((link, index) => (
+                <NavItem
+                  key={link.hash}
+                  link={link}
+                  index={index}
+                  activeSection={activeSection}
+                  setActiveSection={setActiveSection}
+                  setTimeOfLastClick={setTimeOfLastClick}
+                  theme={theme}
+                />
+              ))}
+            </ul>
+          </nav>
         </div>
-
-        {/* Desktop navigation */}
-        <nav className="hidden md:flex gap-4 sm:gap-6 lg:gap-10 xl:gap-12">
-          <ul className="flex items-center space-x-1">
-            {links.map((link, index) => (
-              <NavItem
-                key={link.hash}
-                link={link}
-                index={index}
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
-                setTimeOfLastClick={setTimeOfLastClick}
-                theme={theme}
-              />
-            ))}
-          </ul>
-        </nav>
 
         {/* Theme switch and mobile menu button */}
         <div className="flex items-center gap-2 md:gap-4">

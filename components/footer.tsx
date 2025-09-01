@@ -46,7 +46,7 @@ export default function Footer() {
     <footer className="relative pt-10 pb-6 sm:pt-16 sm:pb-10 overflow-hidden w-full px-2 sm:px-4 md:px-8">
       {/* Background gradient with wave */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950"></div>
+        <div className="absolute inset-0"></div>
         <svg
           className="absolute top-0 w-full text-white dark:text-gray-900"
           viewBox="0 0 1440 320"
@@ -184,17 +184,19 @@ export default function Footer() {
 
         {/* Copyright section */}
         <div className="text-center">
-          <p className="flex items-center justify-center text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-center text-gray-600 dark:text-gray-400">
             <span>Made with</span>
-            <motion.div
-              className="mx-2 text-red-500"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              <FaHeart />
-            </motion.div>
+            <span className="mx-2 inline-block">
+              <motion.span
+                className="text-red-500"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
+                <FaHeart />
+              </motion.span>
+            </span>
             <span>by Khadeeja Asif</span>
-          </p>
+          </div>
           <p className="mt-2 text-gray-500 dark:text-gray-500 text-sm">
             &copy; {new Date().getFullYear()} All rights reserved
           </p>

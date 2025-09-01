@@ -1,476 +1,240 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import SectionHeading from "./section-heading";
-import { motion, AnimatePresence } from "framer-motion";
-import { useSectionInView } from "@/lib/hooks";
-import { sendEmail } from "@/actions/sendEmail";
-import SubmitBtn from "./submit-btn";
-import toast from "react-hot-toast";
+import { useState, useEffect, useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import {
   FaEnvelope,
   FaPaperPlane,
   FaLinkedin,
   FaGithub,
   FaTwitter,
-  FaExclamationTriangle,
-  FaCheck,
-  FaUser,
-  FaLock,
 } from "react-icons/fa";
+import { sendEmail } from "@/actions/sendEmail";
+import toast from "react-hot-toast";
 
 export default function Contact() {
-  const { ref } = useSectionInView("Contact");
-  const [name, setName] = useState("");
-  const [senderEmail, setSenderEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [formState, setFormState] = useState("idle"); // idle, loading, success, error
-  const [characterCount, setCharacterCount] = useState(0);
-  const [floatingLabels, setFloatingLabels] = useState({
-    name: false,
-    email: false,
-    message: false,
+  const [mounted, setMounted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    senderEmail: "",
+    message: "",
   });
+  const [charCount, setCharCount] = useState(0);
+  const [isSending, setIsSending] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  useEffect(() => {
-    setCharacterCount(message.length);
-  }, [message]);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
 
-  // Update floating label state based on input content
-  useEffect(() => {
-    setFloatingLabels({
-      name: name.length > 0,
-      email: senderEmail.length > 0,
-      message: message.length > 0,
-    });
-  }, [name, senderEmail, message]);
+  useEffect(() => setMounted(true), []);
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "message") setCharCount(value.length);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    setFormState("loading");
-
-    if (!isValidEmail(senderEmail)) {
-      setError("Please enter a valid email address.");
-      setFormState("error");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.senderEmail || !formData.message) {
+      toast.error("Please fill in all fields ✍️");
       return;
     }
 
-    if (message.length === 0) {
-      setError("Message cannot be empty.");
-      setFormState("error");
-      return;
-    }
-
-    if (message.length > 50000) {
-      setError("Message cannot exceed 50000 characters.");
-      setFormState("error");
-      return;
-    }
-
-    const formData = { senderName: name, senderEmail, message };
-
+    setIsSending(true);
     try {
-      const { error: responseError } = await sendEmail(formData);
-
-      if (responseError) {
-        toast.error(responseError);
-        setFormState("error");
-        return;
-      }
-
-      setName("");
-      setSenderEmail("");
-      setMessage("");
-      setCharacterCount(0);
-      setFloatingLabels({ name: false, email: false, message: false });
-      setFormState("success");
-      toast.success("Email sent successfully!");
-
-      // Reset form state after showing success
-      setTimeout(() => {
-        setFormState("idle");
-      }, 3000);
-    } catch (err) {
-      console.error("Error sending email:", err);
-      setFormState("error");
-      toast.error("Something went wrong. Please try again later.");
+      await sendEmail(formData);
+      setIsSubmitted(true);
+      toast.success("Message sent successfully");
+      setFormData({ name: "", senderEmail: "", message: "" });
+      setCharCount(0);
+    } catch {
+      toast.error("Something went wrong. Please try again");
+    } finally {
+      setIsSending(false);
     }
   };
 
   return (
     <section
       ref={ref}
-      className="w-full max-w-2xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-12 flex flex-col gap-6"
+      className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-3 sm:px-6 md:px-8 py-6 sm:py-10 md:py-12 flex flex-col gap-6"
     >
-      {/* Background Elements with enhanced visuals */}
-      <div className="absolute inset-0 -z-10 overflow-hidden rounded-3xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-purple-950/30 opacity-60"></div>
+      <div className="bg-white/90 dark:bg-gray-900/80 rounded-2xl shadow-xl p-4 sm:p-8 md:p-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-6 sm:mb-10"
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+            Get In Touch
+          </h2>
+          <p className="mt-2 sm:mt-3 text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+            Have a project idea, question, or just want to connect? Drop me a
+            message ✨
+          </p>
+        </motion.div>
 
-        {/* Enhanced decorative elements */}
-        <div className="absolute -top-10 -left-10 w-72 h-72 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute -bottom-10 -right-10 w-72 h-72 bg-purple-200 dark:bg-purple-900/20 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-indigo-200 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-20"></div>
-
-        {/* Animated decorative particles */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-blue-400 dark:bg-blue-500 opacity-30"
-            initial={{
-              x: Math.random() * 100 + "%",
-              y: Math.random() * 100 + "%",
-              scale: Math.random() * 0.5 + 0.5,
-            }}
-            animate={{
-              y: [null, Math.random() * 100 + "%"],
-              opacity: [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: Math.random() * 10 + 15,
-              ease: "linear",
-            }}
-          />
-        ))}
-
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-grid-pattern bg-[length:50px_50px] opacity-[0.015] dark:opacity-[0.03]"></div>
-      </div>
-
-      {/* Content Container */}
-      <motion.div
-        className="relative z-10 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border border-gray-200/50 dark:border-gray-800/50 rounded-3xl shadow-xl overflow-hidden"
-        initial={{ y: 50 }}
-        whileInView={{ y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        viewport={{ once: true }}
-      >
-        {/* Glowing top bar with gradient animation */}
-        <div className="relative h-2 w-full overflow-hidden">
-          <div className="h-full w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
-          <motion.div
-            className="absolute top-0 left-0 h-full w-20 bg-white opacity-30"
-            animate={{ x: ["-100%", "500%"] }}
-            transition={{
-              repeat: Infinity,
-              duration: 2.5,
-              ease: "linear",
-              repeatDelay: 1,
-            }}
-          />
-        </div>
-
-        <div className="p-8 sm:p-10">
-          {/* Heading with enhanced icon animation */}
-          <div className="flex flex-col items-center justify-center mb-10">
-            <motion.div
-              className="mb-5 p-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 shadow-md"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1, rotate: [0, 10, 0] }}
-              transition={{ type: "spring", stiffness: 100, delay: 0.3 }}
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="space-y-4 sm:space-y-6 relative z-10"
+        >
+          {/* Name */}
+          <div className="relative">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full h-12 sm:h-14 px-3 sm:px-4 pt-5 pb-2 rounded-lg sm:rounded-xl 
+              bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 
+              text-sm sm:text-base text-gray-800 dark:text-gray-200 
+              placeholder-transparent focus:outline-none 
+              focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all"
+              placeholder="Your Name"
+            />
+            <label
+              htmlFor="name"
+              className={`absolute left-3 sm:left-4 top-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400 
+                transition-all pointer-events-none ${
+                  formData.name
+                    ? "-translate-y-3 sm:-translate-y-4 scale-90"
+                    : ""
+                }`}
             >
-              <FaEnvelope className="text-2xl text-blue-600 dark:text-blue-400" />
-            </motion.div>
-            <SectionHeading>Get in Touch</SectionHeading>
+              Your Name
+            </label>
           </div>
 
-          <motion.p
-            className="text-gray-700 dark:text-gray-300 text-center max-w-2xl mx-auto mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            I'm always open to new opportunities and collaborations. Reach out
-            directly at{" "}
-            <a
-              className="relative inline-block group text-blue-600 dark:text-blue-400 font-medium"
-              href="mailto:khadeejaasif323@gmail.com"
+          {/* Email */}
+          <div className="relative">
+            <input
+              id="senderEmail"
+              name="senderEmail"
+              type="email"
+              value={formData.senderEmail}
+              onChange={handleChange}
+              className="w-full h-12 sm:h-14 px-3 sm:px-4 pt-5 pb-2 rounded-lg sm:rounded-xl 
+              bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 
+              text-sm sm:text-base text-gray-800 dark:text-gray-200 
+              placeholder-transparent focus:outline-none 
+              focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all"
+              placeholder="Your Email"
+            />
+            <label
+              htmlFor="senderEmail"
+              className={`absolute left-3 sm:left-4 top-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400 
+                transition-all pointer-events-none ${
+                  formData.senderEmail
+                    ? "-translate-y-3 sm:-translate-y-4 scale-90"
+                    : ""
+                }`}
             >
-              khadeejaasif323@gmail.com
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-400 to-indigo-500 dark:from-blue-600 dark:to-indigo-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-            </a>{" "}
-            or fill out the form below.
-          </motion.p>
+              Your Email
+            </label>
+          </div>
 
-          {/* Social media links with enhanced styling */}
+          {/* Message */}
+          <div className="relative">
+            <textarea
+              id="message"
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              maxLength={500}
+              className="w-full h-40 sm:h-52 px-3 sm:px-4 pt-6 pb-2 rounded-lg sm:rounded-xl 
+              bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 
+              text-sm sm:text-base text-gray-800 dark:text-gray-200 
+              placeholder-transparent focus:outline-none 
+              focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all resize-none"
+              placeholder="Your Message"
+            />
+            <label
+              htmlFor="message"
+              className={`absolute left-3 sm:left-4 top-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400 
+                transition-all pointer-events-none ${
+                  formData.message
+                    ? "-translate-y-2 sm:-translate-y-3 scale-90"
+                    : ""
+                }`}
+            >
+              Your Message
+            </label>
+
+            {/* Character counter */}
+            <div
+              className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 
+              text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 sm:gap-2"
+            >
+              <div className="w-16 sm:w-24 h-1 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                <div
+                  className="h-1 bg-blue-500 dark:bg-blue-400 transition-all"
+                  style={{ width: `${(charCount / 500) * 100}%` }}
+                />
+              </div>
+              {charCount}/500
+            </div>
+          </div>
+
+          {/* Submit button */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            disabled={isSending}
+            type="submit"
+            className="w-full sm:w-auto px-5 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl 
+            bg-blue-600 text-white font-medium text-sm sm:text-base 
+            hover:bg-blue-700 focus:outline-none focus:ring-2 
+            focus:ring-blue-500/40 disabled:opacity-70 flex items-center justify-center gap-x-6 mx-auto"
+          >
+            {isSending ? (
+              "Sending..."
+            ) : isSubmitted ? (
+              "Sent!"
+            ) : (
+              <>
+                Send Message <FaPaperPlane size={16} />
+              </>
+            )}
+          </motion.button>
+
+          {/* Social links */}
           <motion.div
-            className="flex justify-center gap-4 mb-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="flex flex-row justify-center gap-x-6 mb-6 sm:mb-10"
           >
             {[
+              { Icon: FaGithub, href: "https://github.com/Khadeejahh-Asiff" },
               {
-                icon: <FaLinkedin />,
-                url: "https://www.linkedin.com/in/khadeejah-asif/",
-                bgClass: "from-blue-600 to-blue-700",
-                hoverClass: "from-blue-700 to-blue-800",
+                Icon: FaLinkedin,
+                href: "https://linkedin.com/in/khadeejah-asif",
               },
-              {
-                icon: <FaGithub />,
-                url: "https://github.com/Khadeejahh-Asiff",
-                bgClass: "from-gray-700 to-gray-800",
-                hoverClass: "from-gray-800 to-gray-900",
-              },
-              {
-                icon: <FaTwitter />,
-                url: "https://twitter.com",
-                bgClass: "from-blue-400 to-blue-500",
-                hoverClass: "from-blue-500 to-blue-600",
-              },
-            ].map((social, index) => (
-              <motion.a
-                key={index}
-                href={social.url}
+              { Icon: FaTwitter, href: "https://twitter.com/" },
+              { Icon: FaEnvelope, href: "mailto:khadeejaasif323@gmail.com" },
+            ].map(({ Icon, href }, i) => (
+              <a
+                key={i}
+                href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`p-3 bg-gradient-to-br ${social.bgClass} hover:bg-gradient-to-br hover:${social.hoverClass} rounded-full text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                className="p-2 sm:p-3 rounded-full bg-gray-50 dark:bg-gray-900/30 
+              border border-gray-200 dark:border-gray-700 hover:bg-blue-50 
+              dark:hover:bg-blue-900/30 transition-colors"
               >
-                {social.icon}
-              </motion.a>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
+              </a>
             ))}
           </motion.div>
-
-          {/* Form container with enhanced visuals */}
-          <motion.div
-            className="relative rounded-2xl overflow-hidden transition-all duration-300 border border-gray-200/80 dark:border-gray-700/80 shadow-lg"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            {/* Success overlay with enhanced animation */}
-            <AnimatePresence>
-              {formState === "success" && (
-                <motion.div
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-20"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1, rotate: [0, 10, 0] }}
-                    transition={{ type: "spring", damping: 8 }}
-                    className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center mb-5 shadow-md"
-                  >
-                    <FaCheck className="text-3xl text-green-600 dark:text-green-400" />
-                  </motion.div>
-                  <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
-                    Message Sent!
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Thank you for reaching out. I'll get back to you soon!
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <form
-              className="flex flex-col p-8 bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm"
-              onSubmit={handleSubmit}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Name input with floating label */}
-                <div className="relative group">
-                  <motion.label
-                    htmlFor="name"
-                    className={`absolute left-4 transition-all duration-200 pointer-events-none text-gray-500 dark:text-gray-400 ${
-                      floatingLabels.name
-                        ? "text-xs top-2"
-                        : "text-base top-1/2 -translate-y-1/2"
-                    }`}
-                    animate={{
-                      top: floatingLabels.name ? 8 : "50%",
-                      y: floatingLabels.name ? 0 : "-50%",
-                      fontSize: floatingLabels.name ? "0.75rem" : "1rem",
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaUser
-                        className={
-                          floatingLabels.name ? "text-xs" : "text-base"
-                        }
-                      />
-                      Your Name
-                    </span>
-                  </motion.label>
-
-                  <input
-                    id="name"
-                    className="w-full h-14 px-4 pt-5 pb-2 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all"
-                    name="name"
-                    type="text"
-                    maxLength={100}
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                    }}
-                    onFocus={() =>
-                      setFloatingLabels((prev) => ({ ...prev, name: true }))
-                    }
-                    onBlur={() =>
-                      setFloatingLabels((prev) => ({
-                        ...prev,
-                        name: name.length > 0,
-                      }))
-                    }
-                  />
-                </div>
-
-                {/* Email input with floating label */}
-                <div className="relative group">
-                  <motion.label
-                    htmlFor="email"
-                    className={`absolute left-4 transition-all duration-200 pointer-events-none text-gray-500 dark:text-gray-400 ${
-                      floatingLabels.email
-                        ? "text-xs top-2"
-                        : "text-base top-1/2 -translate-y-1/2"
-                    }`}
-                    animate={{
-                      top: floatingLabels.email ? 8 : "50%",
-                      y: floatingLabels.email ? 0 : "-50%",
-                      fontSize: floatingLabels.email ? "0.75rem" : "1rem",
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaEnvelope
-                        className={
-                          floatingLabels.email ? "text-xs" : "text-base"
-                        }
-                      />
-                      Your Email
-                    </span>
-                  </motion.label>
-
-                  <input
-                    id="email"
-                    className="w-full h-14 px-4 pt-5 pb-2 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all"
-                    name="senderEmail"
-                    type="email"
-                    required
-                    maxLength={500}
-                    value={senderEmail}
-                    onChange={(e) => {
-                      setSenderEmail(e.target.value);
-                      setError("");
-                    }}
-                    onFocus={() =>
-                      setFloatingLabels((prev) => ({ ...prev, email: true }))
-                    }
-                    onBlur={() =>
-                      setFloatingLabels((prev) => ({
-                        ...prev,
-                        email: senderEmail.length > 0,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Message textarea with floating label and character count */}
-              <div className="relative mb-3 group">
-                <motion.label
-                  htmlFor="message"
-                  className={`absolute left-4 transition-all duration-200 pointer-events-none text-gray-500 dark:text-gray-400 ${
-                    floatingLabels.message ? "text-xs top-2" : "text-base top-6"
-                  }`}
-                  animate={{
-                    top: floatingLabels.message ? 8 : 24,
-                    fontSize: floatingLabels.message ? "0.75rem" : "1rem",
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <span className="flex items-center gap-2">
-                    <FaPaperPlane
-                      className={
-                        floatingLabels.message ? "text-xs" : "text-base"
-                      }
-                    />
-                    Your Message
-                  </span>
-                </motion.label>
-
-                <textarea
-                  id="message"
-                  className="w-full h-52 px-4 pt-6 pb-2 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-600/40 transition-all resize-none"
-                  name="message"
-                  required
-                  maxLength={50000}
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    setError("");
-                  }}
-                  onFocus={() =>
-                    setFloatingLabels((prev) => ({ ...prev, message: true }))
-                  }
-                  onBlur={() =>
-                    setFloatingLabels((prev) => ({
-                      ...prev,
-                      message: message.length > 0,
-                    }))
-                  }
-                />
-
-                {/* Character count with gradient progress */}
-                <div className="absolute bottom-3 right-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                  <div className="w-24 h-1 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                      style={{
-                        width: `${Math.min((characterCount / 50000) * 100, 100)}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <span>{characterCount} / 50000</span>
-                </div>
-              </div>
-
-              {/* Error message with enhanced animation */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-3 text-red-700 dark:text-red-400"
-                    initial={{ opacity: 0, y: -10, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -10, height: 0 }}
-                  >
-                    <div className="shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-800/30 flex items-center justify-center">
-                      <FaExclamationTriangle />
-                    </div>
-                    <span>{error}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit button - either use your existing component or replace with enhanced version */}
-              <div className="mt-3">
-                <SubmitBtn />
-              </div>
-
-              {/* Privacy note */}
-              <div className="mt-5 text-center text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
-                <FaLock className="text-gray-400" />
-                <span>
-                  Your information is secured and never shared with third
-                  parties
-                </span>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      </motion.div>
+        </motion.form>
+      </div>
     </section>
   );
 }
