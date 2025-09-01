@@ -11,7 +11,8 @@ import { RiMoonClearLine, RiSunLine } from "react-icons/ri";
 import type { SectionName } from "@/lib/types";
 
 export default function Header() {
-  const { activeSection, setActiveSection, setTimeOfLastClick } = useActiveSectionContext();
+  const { activeSection, setActiveSection, setTimeOfLastClick } =
+    useActiveSectionContext();
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,7 +22,7 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -33,69 +34,47 @@ export default function Header() {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-x"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 blur-sm opacity-50 animate-pulse"></div>
       </div>
-      
-      {/* Main header container - Full width with enhanced background effects */}
-      <motion.div 
+      {/* Main header container - responsive padding and stacking */}
+      <motion.div
         className={`w-full ${
-          isScrolled 
-            ? theme === "light"
-              ? "py-3 bg-white/90 backdrop-blur-lg border-b border-gray-200/50 shadow-lg"
-              : "py-3 bg-gray-950/90 backdrop-blur-lg border-b border-gray-800/50 shadow-xl"
-            : theme === "light"
-              ? "py-5 bg-transparent"
-              : "py-5 bg-transparent"
-        } transition-all duration-300 relative`}
-        initial={{ y: -100 }}
+          isScrolled
+            ? "bg-white/80 dark:bg-[#18181B]/80 shadow-lg backdrop-blur-md border-b border-gray-200 dark:border-gray-800"
+            : "bg-transparent"
+        } transition-all duration-300 flex flex-col md:flex-row items-center justify-between px-2 sm:px-4 md:px-12 md:py-4 lg:px-24 xl:px-32 py-2`}
+        initial={{ y: -80 }}
         animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18 }}
       >
-        {/* Subtle gradient background overlay */}
-        {isScrolled && (
-          <div className={`absolute inset-0 -z-10 ${
-            theme === "light"
-              ? "bg-gradient-to-br from-white via-gray-50 to-gray-100 opacity-80"
-              : "bg-gradient-to-br from-gray-950 via-gray-900 to-black opacity-90"
-          }`}></div>
-        )}
-
-        {/* Container that fills width with proper padding */}
-        <div className="w-full px-4 flex items-center justify-between relative z-10">
-          {/* Logo */}
-          <motion.div 
-            className="flex items-center space-x-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
+        {/* Logo and navigation for desktop */}
+        <div className="flex items-center gap-2 sm:gap-4 mb-2 md:mb-0">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-base sm:text-lg md:text-xl lg:text-2xl"
           >
-            <div className={`flex items-center justify-center h-10 w-10 rounded-full ${
-              theme === "light" 
-                ? "bg-gradient-to-br from-blue-600 to-purple-600 text-white"
-                : "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
-            } shadow-lg hover:scale-105 transition-transform`}>
-              <FaCode className="text-lg" />
-            </div>
-            <span className={`text-lg font-bold ${
-              theme === "light" ? "text-gray-900" : "text-white"
-            } hidden sm:block`}>Khadeeja Asif</span>
-          </motion.div>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:block">
-            <ul className="flex items-center space-x-1">
-              {links.map((link, index) => (
-                <NavItem 
-                  key={link.hash}
-                  link={link}
-                  index={index}
-                  activeSection={activeSection}
-                  setActiveSection={setActiveSection}
-                  setTimeOfLastClick={setTimeOfLastClick}
-                  theme={theme}
-                />
-              ))}
-            </ul>
-          </nav>
-          
+            <FaCode className="text-blue-500" />
+            <span className="hidden sm:inline">Khadeeja</span>
+          </Link>
+        </div>
+
+        {/* Desktop navigation */}
+        <nav className="hidden md:flex gap-4 sm:gap-6 lg:gap-10 xl:gap-12">
+          <ul className="flex items-center space-x-1">
+            {links.map((link, index) => (
+              <NavItem
+                key={link.hash}
+                link={link}
+                index={index}
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                setTimeOfLastClick={setTimeOfLastClick}
+                theme={theme}
+              />
+            ))}
+          </ul>
+        </nav>
+
+        {/* Theme switch and mobile menu button */}
+        <div className="flex items-center gap-2 md:gap-4">
           {/* Theme toggle */}
           <div className="hidden md:flex items-center space-x-4">
             <motion.button
@@ -109,59 +88,46 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               aria-label="Toggle theme"
             >
-              {theme === "dark" ?   <RiMoonClearLine className="text-xl" /> :  <RiSunLine className="text-xl" /> }
+              {theme === "dark" ? (
+                <RiMoonClearLine className="text-xl" />
+              ) : (
+                <RiSunLine className="text-xl" />
+              )}
             </motion.button>
           </div>
-          
+
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
-            {/* Theme toggle for mobile */}
-            <button
-              className={`p-2 rounded-full transition-colors ${
-                theme === "light"
-                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ?   <RiMoonClearLine className="text-xl" /> :  <RiSunLine className="text-xl" /> }
-            </button>
-            
-            {/* Hamburger button */}
-            <button 
-              className={`flex flex-col items-center justify-center w-10 h-10 rounded-md focus:outline-none ${
-                theme === "light" ? "text-gray-900" : "text-white"
-              }`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              <span className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}></span>
-              <span className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : 'mb-1.5'}`}></span>
-              <span className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-            </button>
-          </div>
+          <button
+            className="md:hidden p-2 rounded-lg focus:outline-none"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span
+              className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? "rotate-45 translate-y-1.5" : "mb-1.5"}`}
+            ></span>
+            <span
+              className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? "opacity-0" : "mb-1.5"}`}
+            ></span>
+            <span
+              className={`block h-0.5 w-6 ${theme === "light" ? "bg-gray-900" : "bg-white"} transition-all duration-300 ${mobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
+            ></span>
+          </button>
         </div>
       </motion.div>
-      
-      {/* Mobile menu - SOLID background and solid item backgrounds - Full width */}
+
+      {/* Mobile menu overlay - improved for mobile */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div 
-            className={`fixed inset-0 pt-24 pb-6 px-4 z-[998] md:hidden flex flex-col ${
-              theme === "light"
-                ? "bg-white" // Solid white background
-                : "bg-gray-950" // Solid dark background
-            }`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+          <motion.nav
+            className="fixed top-0 left-0 w-full h-full bg-white dark:bg-[#18181B] z-[1000] flex flex-col items-center justify-center gap-6 sm:gap-8 text-base sm:text-lg px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
             <nav className="flex flex-col items-center justify-center flex-1 w-full">
               <ul className="flex flex-col items-center space-y-6 w-full">
                 {links.map((link, index) => (
-                  <motion.li 
+                  <motion.li
                     key={link.hash}
                     className="w-full"
                     initial={{ opacity: 0, y: 20 }}
@@ -171,7 +137,7 @@ export default function Header() {
                     <Link
                       href={link.hash}
                       className={`block text-center py-3 text-lg font-medium rounded-md transition-all duration-300 ${
-                        activeSection === link.name 
+                        activeSection === link.name
                           ? theme === "light"
                             ? "text-gray-900 bg-gray-100 border border-gray-200"
                             : "text-white bg-gray-800 border border-gray-700"
@@ -191,7 +157,7 @@ export default function Header() {
                 ))}
               </ul>
             </nav>
-          </motion.div>
+          </motion.nav>
         )}
       </AnimatePresence>
     </header>
@@ -208,9 +174,16 @@ type NavItemProps = {
   theme: string;
 };
 
-const NavItem = ({ link, index, activeSection, setActiveSection, setTimeOfLastClick, theme }: NavItemProps) => {
+const NavItem = ({
+  link,
+  index,
+  activeSection,
+  setActiveSection,
+  setTimeOfLastClick,
+  theme,
+}: NavItemProps) => {
   return (
-    <motion.li 
+    <motion.li
       className="relative"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -219,9 +192,13 @@ const NavItem = ({ link, index, activeSection, setActiveSection, setTimeOfLastCl
       <Link
         href={link.hash}
         className={`relative px-3 py-2 rounded-full font-medium transition-all duration-300 ${
-          activeSection === link.name 
-            ? theme === "light" ? "text-gray-900" : "text-white"
-            : theme === "light" ? "text-gray-600 hover:text-gray-900" : "text-gray-400 hover:text-gray-200"
+          activeSection === link.name
+            ? theme === "light"
+              ? "text-gray-900"
+              : "text-white"
+            : theme === "light"
+              ? "text-gray-600 hover:text-gray-900"
+              : "text-gray-400 hover:text-gray-200"
         }`}
         onClick={() => {
           setActiveSection(link.name as SectionName);

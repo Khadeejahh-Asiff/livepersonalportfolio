@@ -3,17 +3,17 @@ import { Inter, Poppins } from "next/font/google";
 import ClientLayout from "@/components/client-layout";
 
 // Font setup
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap"
+  display: "swap",
 });
 
-const poppins = Poppins({ 
+const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--font-poppins",
-  display: "swap"
+  display: "swap",
 });
 
 export const metadata = {
@@ -33,16 +33,17 @@ export const metadata = {
   ],
 };
 
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`!scroll-smooth ${inter.variable} ${poppins.variable}`}>
-      <body className={`${inter.className} relative bg-gradient-to-b from-white via-gray-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-gray-800 dark:text-gray-200 transition-colors duration-300`}>
-        <ClientLayout>{children}</ClientLayout>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <body className="bg-white dark:bg-[#18181B] text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
+          <ClientLayout>{children}</ClientLayout>
+        </div>
       </body>
     </html>
   );
